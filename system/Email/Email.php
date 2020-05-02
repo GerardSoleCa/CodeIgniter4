@@ -123,6 +123,12 @@ class Email
 	 */
 	public $SMTPCrypto = '';
 	/**
+	 * SMTP Encryption Options
+	 *
+	 * @var array
+	 */
+	public $SMTPCryptoOptions = [];
+	/**
 	 * Whether to apply word-wrapping to the message body.
 	 *
 	 * @var boolean
@@ -1826,9 +1832,10 @@ class Email
 			return true;
 		}
 		$ssl               = ($this->SMTPCrypto === 'ssl') ? 'ssl://' : '';
-		$this->SMTPConnect = fsockopen(
-				$ssl . $this->SMTPHost, $this->SMTPPort, $errno, $errstr, $this->SMTPTimeout
-		);
+		$context = stream_context_create($this->SMTPCryptoOptions);
+		$this->SMTPConnect = stream_socket_client(
+			$ssl . $this->SMTPHost . ':' . $this->SMTPPort, $errno, $errstr, $this->SMTPTimeout, STREAM_CLIENT_CONNECT, $context);
+
 		if (! is_resource($this->SMTPConnect))
 		{
 			$this->setErrorMessage(lang('Email.SMTPError', [$errno . ' ' . $errstr]));
